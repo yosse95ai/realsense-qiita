@@ -1,6 +1,6 @@
 ﻿#pragma once
 #include <iostream>
-#include "rs2Class.h"
+#include "rs2Class.hpp"
 
 /// <summary>
 /// デバイス情報を表示する
