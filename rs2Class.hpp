@@ -213,7 +213,6 @@ DeviceInfo RsCamera::getSensorRange(rs2::sensor sensor)
 
 		if (sensor.supports(option)) {
 
-			sensor.get_option(option);
 			rs2::option_range range = sensor.get_option_range(option);
 			auto range_key = rs2_option_to_string(option);
 			auto def_value = std::to_string((int)range.def);
