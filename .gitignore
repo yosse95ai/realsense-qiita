@@ -340,5 +340,5 @@ ASALocalRun/
 healthchecksdb
 
 # OpenGL
-./include/
-./lib/
+include/
+lib/
