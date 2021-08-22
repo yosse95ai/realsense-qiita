@@ -193,7 +193,7 @@ SensorInfo RsCamera::getSensorsInfo()
 /// <returns>T:Ú‘±‚ ‚èCF:Ú‘±–³‚µ</returns>
 bool RsCamera::isConnectedDevices() {
 	devices = ctx.query_devices();
-	if (!devices.size()) { 
+	if (!devices.size()) {
 		return false;
 	}
 	return true;

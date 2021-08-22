@@ -23,7 +23,7 @@ try {
 	for (auto sensors_info : camera.getSensorsInfo()) {
 		std::cout << std::endl << "Sensor name :  " << sensors_info.first << std::endl;
 		for (auto range : sensors_info.second) {
-			std::cout << "    " << range.first << " :  " << range.second<<std::endl;
+			std::cout << "    " << range.first << " :  " << range.second << std::endl;
 		}
 	}
 
