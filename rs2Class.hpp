@@ -8,6 +8,7 @@
 #define FPS 30
 
 typedef std::map<std::string, std::string> DeviceInfo;
+typedef std::map<std::string, DeviceInfo> SensorInfo;
 
 /// <summary>
 /// D455カメラ操作クラス
@@ -27,11 +28,12 @@ public:
 	void getColorFrame(cv::Mat& color_image);
 	void getDepthFrame(cv::Mat& depth_image);
 	void getComboFrame(cv::Mat& combo_image, rs2::align align);
-	DeviceInfo getDeviceInfo();
 	DeviceInfo getDeviceInfoVer2();
+	SensorInfo getSensorsInfo();
 
 private:
 	bool isConnectedDevices();
+	DeviceInfo getSensorRange(rs2::sensor sensor);
 
 	rs2::pipeline pipe;
 	rs2::frameset frames;
@@ -141,39 +143,14 @@ void RsCamera::getComboFrame(cv::Mat& combo_image, rs2::align align)
 }
 
 /// <summary>
-/// デバイスの情報を連想配列で取得する
-/// </summary>
-/// <returns>デバイスの情報の連想配列</returns>
-DeviceInfo RsCamera::getDeviceInfo()
-{
-	rs2::device device = devices[0];
-	DeviceInfo dev_info;
-
-	dev_info["NAME"] = device.get_info(RS2_CAMERA_INFO_NAME);
-	dev_info["ADVANCED_MODE"] = device.get_info(RS2_CAMERA_INFO_ADVANCED_MODE);
-	dev_info["ASIC_SERIAL_NUMBER"] = device.get_info(RS2_CAMERA_INFO_ASIC_SERIAL_NUMBER);
-	dev_info["CAMERA_LOCKED"] = device.get_info(RS2_CAMERA_INFO_CAMERA_LOCKED);
-	dev_info["DEBUG_OP_CODE"] = device.get_info(RS2_CAMERA_INFO_DEBUG_OP_CODE);
-	dev_info["FIRMWARE_UPDATE_ID"] = device.get_info(RS2_CAMERA_INFO_FIRMWARE_UPDATE_ID);
-	dev_info["FIRMWARE_VERSION"] = device.get_info(RS2_CAMERA_INFO_FIRMWARE_VERSION);
-	dev_info["PRODUCT_LINE"] = device.get_info(RS2_CAMERA_INFO_PRODUCT_LINE);
-	dev_info["PRODUCT_ID"] = device.get_info(RS2_CAMERA_INFO_PRODUCT_ID);
-	dev_info["PHYSICAL_PORT"] = device.get_info(RS2_CAMERA_INFO_PHYSICAL_PORT);
-	dev_info["RECOMMENDED_FIRMWARE_VERSION"] = device.get_info(RS2_CAMERA_INFO_RECOMMENDED_FIRMWARE_VERSION);
-	dev_info["SERIAL_NUMBER"] = device.get_info(RS2_CAMERA_INFO_SERIAL_NUMBER);
-	dev_info["USB_TYPE_DESCRIPTOR"] = device.get_info(RS2_CAMERA_INFO_USB_TYPE_DESCRIPTOR);
-
-	return dev_info;
-}
-
-/// <summary>
-/// RS2_CAMERA_INFO_COUNTを使用した例
+/// デバイス情報を取得する
 /// </summary>
 /// <returns>デバイスの情報の連想配列</returns>
 DeviceInfo RsCamera::getDeviceInfoVer2()
 {
 	rs2::device device = devices[0];
 	DeviceInfo dev_info;
+
 	for (int i = 0; i < RS2_CAMERA_INFO_COUNT; ++i) {
 		rs2_camera_info info = (rs2_camera_info)i;
 
@@ -183,6 +160,26 @@ DeviceInfo RsCamera::getDeviceInfoVer2()
 		}
 	}
 	return dev_info;
+}
+
+/// <summary>
+/// センサーの情報を取得する
+/// </summary>
+/// <returns>センサーの情報</returns>
+SensorInfo RsCamera::getSensorsInfo()
+{
+	rs2::device device = devices[0];
+	std::vector<rs2::sensor> sensors = device.query_sensors();
+
+	SensorInfo sensors_info;
+
+	for (rs2::sensor sensor : sensors) {
+
+		std::string name = sensor.get_info(RS2_CAMERA_INFO_NAME);
+
+		sensors_info[name] = getSensorRange(sensor);
+	}
+	return sensors_info;
 }
 
 /*********************************************************
@@ -200,4 +197,32 @@ bool RsCamera::isConnectedDevices() {
 		return false;
 	}
 	return true;
+}
+
+/// <summary>
+/// センサーオプションのパラメータ範囲を格納
+/// </summary>
+/// <param name="sensor">センサー</param>
+/// <returns>オプションのパラメータ情報</returns>
+DeviceInfo RsCamera::getSensorRange(rs2::sensor sensor)
+{
+	DeviceInfo info;
+	for (int i = 0; i < RS2_OPTION_COUNT; ++i) {
+
+		rs2_option option = (rs2_option)i;
+
+		if (sensor.supports(option)) {
+
+			sensor.get_option(option);
+			rs2::option_range range = sensor.get_option_range(option);
+			auto range_key = rs2_option_to_string(option);
+			auto def_value = std::to_string((int)range.def);
+			auto min = std::to_string((int)range.min);
+			auto max = std::to_string((int)range.max);
+			auto step = std::to_string((int)range.step);
+
+			info[range_key] = def_value + " ( " + min + " <" + step + "> " + max + " ) ";
+		}
+	}
+	return info;
 }

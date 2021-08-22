@@ -2,29 +2,6 @@
 #include <iostream>
 #include "rs2Class.hpp"
 
-/// <summary>
-/// デバイス情報を表示する
-/// </summary>
-/// <param name="info">デバイスの情報</param>
-void showDeviceInfo(RsCamera camera)
-{
-	DeviceInfo info = camera.getDeviceInfo();
-	std::cout
-		<< "** Device info **" << std::endl
-		<< "  NAME         : " << info["NAME"] << std::endl
-		<< "  PRODUCT LINE : " << info["PRODUCT_LINE"] << std::endl
-		<< "  PRODUCT ID   : " << info["PRODUCT_ID"] << std::endl
-		<< "  SERIAL NUMBER       : " << info["SERIAL_NUMBER"] << std::endl
-		<< "  ASIC SERIAL NUMBER  : " << info["ASIC_SERIAL_NUMBER"] << std::endl
-		<< "  FIRMWARE UPDATE ID  : " << info["FIRMWARE_UPDATE_ID"] << std::endl
-		<< "  FIRMWARE_VERSION    : " << info["FIRMWARE_VERSION"] << std::endl
-		<< "  ADVANCED MODE       : " << info["ADVANCED_MODE"] << std::endl
-		<< "  CAMERA LOCKED       : " << info["CAMERA_LOCKED"] << std::endl
-		<< "  DEBUG OP CODE       : " << info["DEBUG_OP_CODE"] << std::endl
-		<< "  USB TYPE DESCRIPTOR : " << info["USB_TYPE_DESCRIPTOR"] << std::endl
-		<< "  RECOMMENDED FIRMWARE VERSION : " << info["RECOMMENDED_FIRMWARE_VERSION"] << std::endl
-		<< "  PHYSICAL_PORT :  " << info["PHYSICAL_PORT"] << std::endl;
-}
 
 int main()
 try {
@@ -38,9 +15,16 @@ try {
 	RsCamera camera(cfg);
 
 	// Show device info
-	//showDeviceInfo(camera);
 	for (auto info : camera.getDeviceInfoVer2()) {
 		std::cout << info.first << " :  " << info.second << std::endl;
+	}
+
+	// Show sensors info
+	for (auto sensors_info : camera.getSensorsInfo()) {
+		std::cout << std::endl << "Sensor name :  " << sensors_info.first << std::endl;
+		for (auto range : sensors_info.second) {
+			std::cout << "    " << range.first << " :  " << range.second<<std::endl;
+		}
 	}
 
 	// Align color stream to depth stream
