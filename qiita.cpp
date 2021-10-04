@@ -14,27 +14,13 @@ try {
 	// RsCamera instance
 	RsCamera camera(cfg);
 
-	// Show device info
-	for (auto info : camera.getDeviceInfoVer2()) {
-		std::cout << info.first << " :  " << info.second << std::endl;
-	}
-
-	// Show sensors info
-	for (auto sensors_info : camera.getSensorsInfo()) {
-		std::cout << std::endl << "Sensor name :  " << sensors_info.first << std::endl;
-		for (auto range : sensors_info.second) {
-			std::cout << "    " << range.first << " :  " << range.second << std::endl;
-		}
-	}
 
 	// Align color stream to depth stream
-	rs2::align align(RS2_STREAM_COLOR);
+	rs2::align align(RS2_STREAM_DEPTH);
 
 	// Display image
-	cv::Mat image(cv::Size(2 * WIDTH, HEIGHT), CV_8UC3);
-
-
-	while (false)
+	cv::Mat image(cv::Size(WIDTH, HEIGHT), CV_8UC3);
+	while (true)
 	{
 		// カラーフレームを取得
 		//camera.getColorFrame(image);
@@ -43,10 +29,12 @@ try {
 		//camera.getDepthFrame(image);
 
 		// カラーフレームとDepthフレームを並べて取得
-		camera.getComboFrame(image, align);
+		//camera.getComboFrame(image, align);
+
+		camera.doDeprojectCenter(image, align);
 
 		// 画像を表示
-		cv::imshow("COMBO_FRAME", image);
+		cv::imshow("DEPTH_FRAME", image);
 
 		// ESCで終了
 		if (cv::waitKey(10) == 27) {
