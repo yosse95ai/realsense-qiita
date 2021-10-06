@@ -17,6 +17,7 @@ try {
 
 	// Align color stream to depth stream
 	rs2::align align(RS2_STREAM_DEPTH);
+	camera.align = &align;
 
 	// Display image
 	cv::Mat image(cv::Size(WIDTH, HEIGHT), CV_8UC3);
@@ -31,7 +32,7 @@ try {
 		// カラーフレームとDepthフレームを並べて取得
 		//camera.getComboFrame(image, align);
 
-		camera.doDeprojectCenter(image, align);
+		camera.doDeprojectCenter(image);
 
 		// 画像を表示
 		cv::imshow("DEPTH_FRAME", image);

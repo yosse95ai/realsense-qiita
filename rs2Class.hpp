@@ -30,8 +30,12 @@ public:
 	void getDepthFrame(cv::Mat& depth_image);
 	void getComboFrame(cv::Mat& combo_image, rs2::align align);
 	DeviceInfo getDeviceInfoVer2();
-	SensorInfo getSensorsInfo();
+	SensorInfo getSensorsInfo(); 
+	void doDeprojectCenter(cv::Mat& depth_image);
 	void doDeprojectCenter(cv::Mat& depth_image, rs2::align align);
+
+public:
+	rs2::align* align;
 
 private:
 	bool isConnectedDevices();
@@ -203,6 +207,32 @@ void RsCamera::doDeprojectCenter(cv::Mat& depth_image, rs2::align align)
 
 
 	std::cout << "[ " << x_pix << "px, " << y_pix << "px ] = "<< "[ "<< point[0] << ", " << point[1] << ", " << point[2] << "] \r";
+
+
+	cv::Mat image(cv::Size(WIDTH, HEIGHT), CV_8UC3, (void*)depth_frame.get_data(), cv::Mat::AUTO_STEP);
+
+	image.copyTo(depth_image);
+}
+
+void RsCamera::doDeprojectCenter(cv::Mat& depth_image)
+{
+	int x_pix = WIDTH / 2;
+	int y_pix = HEIGHT / 2;
+	const float pixel[] = { (float)x_pix,(float)y_pix };
+	float point[3];
+
+	rs2::frameset frames = pipe.wait_for_frames();
+	auto aligned_frames = align->process(frames);
+
+	rs2::depth_frame depth = aligned_frames.get_depth_frame();
+	rs2::video_frame depth_frame = depth.apply_filter(color_map);
+
+	auto inrist = rs2::video_stream_profile(depth.get_profile()).get_intrinsics();
+
+	rs2_deproject_pixel_to_point(point, &inrist, pixel, depth.get_distance(x_pix, y_pix));
+
+
+	std::cout << "[ " << x_pix << "px, " << y_pix << "px ] = " << "[ " << point[0] << ", " << point[1] << ", " << point[2] << "] \r";
 
 
 	cv::Mat image(cv::Size(WIDTH, HEIGHT), CV_8UC3, (void*)depth_frame.get_data(), cv::Mat::AUTO_STEP);
