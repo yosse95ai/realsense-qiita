@@ -20,6 +20,7 @@ public:
 	// コンストラクタ
 	RsCamera();
 	RsCamera(rs2::config cfg);
+	RsCamera(rs2::config cfg, rs2::align _align);
 
 	// デストラクタ
 	~RsCamera() { pipe.stop(); }
@@ -28,14 +29,11 @@ public:
 	float getCenterDistance();
 	void getColorFrame(cv::Mat& color_image);
 	void getDepthFrame(cv::Mat& depth_image);
-	void getComboFrame(cv::Mat& combo_image, rs2::align align);
+	void getComboFrame(cv::Mat& combo_image);
 	DeviceInfo getDeviceInfoVer2();
 	SensorInfo getSensorsInfo(); 
-	void doDeprojectCenter(cv::Mat& depth_image);
-	void doDeprojectCenter(cv::Mat& depth_image, rs2::align align);
+	void doDeprojectPosition(cv::Mat& depth_image);
 
-public:
-	rs2::align* align;
 
 private:
 	bool isConnectedDevices();
@@ -46,6 +44,7 @@ private:
 	rs2::colorizer color_map;
 	rs2::context ctx;
 	rs2::device_list devices;
+	rs2::align align = rs2::align(RS2_STREAM_DEPTH);
 };
 
 /*********************************************************
@@ -78,6 +77,22 @@ RsCamera::RsCamera(rs2::config cfg)
 	else {
 		throw std::runtime_error("ERR: No cameras are connected.");
 	}
+}
+
+/// <summary>
+/// コンストラクタ
+/// </summary>
+/// <param name="cfg">設定情報</param>
+RsCamera::RsCamera(rs2::config cfg, rs2::align _align)
+{
+	if (isConnectedDevices()) {
+		pipe.start(cfg);
+	}
+	else {
+		throw std::runtime_error("ERR: No cameras are connected.");
+	}
+
+	align = _align;
 }
 
 /// <summary>
@@ -131,7 +146,7 @@ void RsCamera::getDepthFrame(cv::Mat& depth_image)
 /// </summary>
 /// <param name="combo_image">フレーム出力先</param>
 /// <param name="align">アラインメントの設定</param>
-void RsCamera::getComboFrame(cv::Mat& combo_image, rs2::align align)
+void RsCamera::getComboFrame(cv::Mat& combo_image)
 {
 	rs2::frameset frames = pipe.wait_for_frames();
 	auto aligned_frames = align.process(frames);
@@ -188,41 +203,19 @@ SensorInfo RsCamera::getSensorsInfo()
 	return sensors_info;
 }
 
-void RsCamera::doDeprojectCenter(cv::Mat& depth_image, rs2::align align)
+/// <summary>
+/// 現実x, y座標に直す
+/// </summary>
+/// <param name="depth_image"></param>
+void RsCamera::doDeprojectPosition(cv::Mat& depth_image)
 {
-	int x_pix = WIDTH / 2;
-	int y_pix = HEIGHT / 2;
+	int x_pix = 3 * WIDTH / 4;
+	int y_pix = HEIGHT / 4;
 	const float pixel[] = { (float)x_pix,(float)y_pix };
 	float point[3];
 
 	rs2::frameset frames = pipe.wait_for_frames();
 	auto aligned_frames = align.process(frames);
-
-	rs2::depth_frame depth = aligned_frames.get_depth_frame();
-	rs2::video_frame depth_frame = depth.apply_filter(color_map);
-
-	auto inrist = rs2::video_stream_profile(depth.get_profile()).get_intrinsics();
-
-	rs2_deproject_pixel_to_point(point, &inrist, pixel, depth.get_distance(x_pix, y_pix));
-
-
-	std::cout << "[ " << x_pix << "px, " << y_pix << "px ] = "<< "[ "<< point[0] << ", " << point[1] << ", " << point[2] << "] \r";
-
-
-	cv::Mat image(cv::Size(WIDTH, HEIGHT), CV_8UC3, (void*)depth_frame.get_data(), cv::Mat::AUTO_STEP);
-
-	image.copyTo(depth_image);
-}
-
-void RsCamera::doDeprojectCenter(cv::Mat& depth_image)
-{
-	int x_pix = WIDTH / 2;
-	int y_pix = HEIGHT / 2;
-	const float pixel[] = { (float)x_pix,(float)y_pix };
-	float point[3];
-
-	rs2::frameset frames = pipe.wait_for_frames();
-	auto aligned_frames = align->process(frames);
 
 	rs2::depth_frame depth = aligned_frames.get_depth_frame();
 	rs2::video_frame depth_frame = depth.apply_filter(color_map);

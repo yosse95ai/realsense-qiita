@@ -11,13 +11,12 @@ try {
 	cfg.enable_stream(RS2_STREAM_COLOR, WIDTH, HEIGHT, RS2_FORMAT_BGR8, FPS);	// Color
 	cfg.enable_stream(RS2_STREAM_DEPTH, WIDTH, HEIGHT, RS2_FORMAT_Z16, FPS);	// Depth
 
-	// RsCamera instance
-	RsCamera camera(cfg);
-
-
 	// Align color stream to depth stream
 	rs2::align align(RS2_STREAM_DEPTH);
-	camera.align = &align;
+
+	// RsCamera instance
+	RsCamera camera(cfg, align);
+
 
 	// Display image
 	cv::Mat image(cv::Size(WIDTH, HEIGHT), CV_8UC3);
@@ -30,12 +29,12 @@ try {
 		//camera.getDepthFrame(image);
 
 		// カラーフレームとDepthフレームを並べて取得
-		//camera.getComboFrame(image, align);
+		// camera.getComboFrame(image);
 
-		camera.doDeprojectCenter(image);
+		camera.doDeprojectPosition(image);
 
 		// 画像を表示
-		cv::imshow("DEPTH_FRAME", image);
+		cv::imshow("COMBO_FRAME", image);
 
 		// ESCで終了
 		if (cv::waitKey(10) == 27) {
