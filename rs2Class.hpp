@@ -40,11 +40,11 @@ private:
 	DeviceInfo getSensorRange(rs2::sensor sensor);
 
 	rs2::pipeline pipe;
-	rs2::frameset frames;
 	rs2::colorizer color_map;
 	rs2::context ctx;
 	rs2::device_list devices;
 	rs2::align align = rs2::align(RS2_STREAM_DEPTH);
+	rs2_intrinsics intr;
 };
 
 /*********************************************************
@@ -86,7 +86,9 @@ RsCamera::RsCamera(rs2::config cfg)
 RsCamera::RsCamera(rs2::config cfg, rs2::align _align)
 {
 	if (isConnectedDevices()) {
-		pipe.start(cfg);
+		rs2::pipeline_profile profile = pipe.start(cfg);
+		rs2::video_stream_profile stream_profile = profile.get_stream(RS2_STREAM_DEPTH).as<rs2::video_stream_profile>();
+		intr = stream_profile.get_intrinsics();
 	}
 	else {
 		throw std::runtime_error("ERR: No cameras are connected.");
@@ -204,7 +206,7 @@ SensorInfo RsCamera::getSensorsInfo()
 }
 
 /// <summary>
-/// 現実x, y座標に直す
+/// ワールド座標を推定する
 /// </summary>
 /// <param name="depth_image"></param>
 void RsCamera::doDeprojectPosition(cv::Mat& depth_image)
@@ -220,9 +222,9 @@ void RsCamera::doDeprojectPosition(cv::Mat& depth_image)
 	rs2::depth_frame depth = aligned_frames.get_depth_frame();
 	rs2::video_frame depth_frame = depth.apply_filter(color_map);
 
-	auto inrist = rs2::video_stream_profile(depth.get_profile()).get_intrinsics();
+	//auto inrist = rs2::video_stream_profile(depth.get_profile()).get_intrinsics();
 
-	rs2_deproject_pixel_to_point(point, &inrist, pixel, depth.get_distance(x_pix, y_pix));
+	rs2_deproject_pixel_to_point(point, &intr, pixel, depth.get_distance(x_pix, y_pix));
 
 
 	std::cout << "[ " << x_pix << "px, " << y_pix << "px ] = " << "[ " << point[0] << ", " << point[1] << ", " << point[2] << "] \r";
