@@ -1,11 +1,6 @@
 # 該当のQiitaの記事
 
-執筆中…
-
-<!-- - [RealSense D455(librealsense2)使ってみた #03](https://qiita.com/RoaaaA/items/bbb6597e9e57de64db53)
-  - カラーフレームの表示
-- [RealSense D455(librealsense2)使ってみた #04](https://qiita.com/RoaaaA/items/7770a40ed5a553e4b92d)
-  - Depthフレームの表示
-- [RealSense D455(librealsense2)使ってみた #05](https://qiita.com/RoaaaA/items/446d4f0849889b28f709)
-  - rs::alignによるフレームの表示
- -->
+- [RealSense D455(librealsense2)使ってみた #08](https://qiita.com/RoaaaA/items/14df1ffc9be137238a92)
+  - rs2::alignをクラス内定義する
+- [RealSense D455(librealsense2)使ってみた #09](https://qiita.com/RoaaaA/items/90dbe8025d05e7581ff6)
+  - xy座標[ピクセル]をワールドxyz座標[メートル]に変換する
