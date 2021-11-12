@@ -222,8 +222,6 @@ void RsCamera::doDeprojectPosition(cv::Mat& depth_image)
 	rs2::depth_frame depth = aligned_frames.get_depth_frame();
 	rs2::video_frame depth_frame = depth.apply_filter(color_map);
 
-	//auto inrist = rs2::video_stream_profile(depth.get_profile()).get_intrinsics();
-
 	rs2_deproject_pixel_to_point(point, &intr, pixel, depth.get_distance(x_pix, y_pix));
 
 
